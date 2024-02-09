@@ -3,58 +3,123 @@ const mongoose = require("mongoose")
 
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
-  useUnifiedTopology: true,
+  useUnifiedTopology: true
 })
 
-let Person
+const personSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true
+  },
+  age: Number,
+  favoriteFoods: [String]
+})
+
+let Person = mongoose.model("Person", personSchema)
 
 const createAndSavePerson = done => {
-  done(null /*, data*/)
+  const personDocument = new Person({
+    name: "David",
+    age: 40,
+    favoriteFoods: ["pizza", "burger"]
+  })
+  personDocument.save(done)
 }
 
 const createManyPeople = (arrayOfPeople, done) => {
-  done(null /*, data*/)
+  Person.create(arrayOfPeople, done)
 }
 
+// createManyPeople(
+//   [
+//     {
+//       name: "David",
+//       age: 40,
+//       favoriteFoods: ["pizza", "burger"]
+//     },
+//     {
+//       name: "Mary",
+//       age: 30,
+//       favoriteFoods: ["sushi", "burrito"]
+//     },
+//     {
+//       name: "John",
+//       age: 20,
+//       favoriteFoods: ["burrito", "sushi"]
+//     }
+//   ],
+//   (err, data) => {
+//     if (err) {
+//       // console.error(err)
+//     } else {
+//       // console.log(data)
+//     }
+//   }
+// )
+
 const findPeopleByName = (personName, done) => {
-  done(null /*, data*/)
+  Person.find({ name: personName }, done)
 }
 
 const findOneByFood = (food, done) => {
-  done(null /*, data*/)
+  Person.findOne({ favoriteFoods: food }, done)
 }
 
 const findPersonById = (personId, done) => {
-  done(null /*, data*/)
+  Person.findById(personId, done)
 }
 
-const findEditThenSave = (personId, done) => {
+const findEditThenSave = async (personId, done) => {
   const foodToAdd = "hamburger"
 
-  done(null /*, data*/)
+  const doc = await Person.findById(personId).catch(err => done(err))
+  doc.favoriteFoods.push(foodToAdd)
+  await doc.save().catch(err => done(err))
+
+  done(null, doc)
 }
 
-const findAndUpdate = (personName, done) => {
+const findAndUpdate = async (personName, done) => {
   const ageToSet = 20
 
-  done(null /*, data*/)
+  const doc = await Person.findOneAndUpdate(
+    { name: personName },
+    { age: ageToSet },
+    { new: true }
+  ).catch(err => done(err))
+
+  done(null, doc)
 }
 
-const removeById = (personId, done) => {
-  done(null /*, data*/)
+const removeById = async (personId, done) => {
+  const removed = await Person.findByIdAndRemove(personId).catch(err =>
+    done(err)
+  )
+
+  done(null, removed)
 }
 
-const removeManyPeople = done => {
+const removeManyPeople = async done => {
   const nameToRemove = "Mary"
 
-  done(null /*, data*/)
+  const removed = await Person.remove({ name: nameToRemove }).catch(err =>
+    done(err)
+  )
+
+  done(null, removed)
 }
 
-const queryChain = done => {
+const queryChain = async done => {
   const foodToSearch = "burrito"
 
-  done(null /*, data*/)
+  Person.find({ favoriteFoods: foodToSearch })
+    .sort({ name: "asc" })
+    .limit(2)
+    .select(["name", "favoriteFoods"])
+    .exec(done)
 }
+
+queryChain((err, data) => console.log(err, data))
 
 /** **Well Done !!**
 /* You completed these challenges, let's go celebrate !
